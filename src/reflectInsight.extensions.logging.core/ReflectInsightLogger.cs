@@ -1,9 +1,8 @@
 ﻿// ReflectInsight
-// Copyright (c) 2019 ReflectSoftware.
+// Copyright (c) 2020 ReflectSoftware.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information. 
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Internal;
 using Plato.Strings;
 using ReflectSoftware.Insight;
 using ReflectSoftware.Insight.Common;
@@ -49,10 +48,9 @@ namespace ReflectInsight.Extensions.Logging
         /// </returns>
         public IDisposable BeginScope<TState>(TState state)
         {
-            var formatter = (state as FormattedLogValues);
-            var message = formatter?.ToString() ?? (state.ToString() ?? string.Empty);
-            
-            if(message.IndexOf("Microsoft.EntityFrameworkCore", StringComparison.OrdinalIgnoreCase) >= 0)
+            var message = state.ToString() ?? string.Empty;
+
+            if (message.IndexOf("Microsoft.EntityFrameworkCore", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return null;
             }
@@ -77,14 +75,15 @@ namespace ReflectInsight.Extensions.Logging
         /// <param name="message">The message.</param>
         private void LogSqlCommand(EventId eventId, string message)
         {
-            if (eventId.Id != 20101)
-            {
-                return;
-            }
+            //if (eventId.Id != 20101)
+            //{
+            //    return;
+            //}
 
             var lines = message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             var sb = new StringBuilder();
 
+           // sb.AppendLine($"{eventId.Name} {eventId.Id}");
 
             for (int i = 1; i < lines.Length; i++)
             {
@@ -144,8 +143,11 @@ namespace ReflectInsight.Extensions.Logging
 
             if ((eventId.Name ?? string.Empty).Contains("Microsoft.EntityFrameworkCore"))
             {
-                LogSqlCommand(eventId, message);
-                return;
+                if (eventId.Id == 20101)
+                {
+                    LogSqlCommand(eventId, message);
+                    return;
+                }
             }
 
             var messageType = MessageType.Clear;
